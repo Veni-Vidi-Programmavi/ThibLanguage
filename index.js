@@ -1,48 +1,61 @@
-const chalk = require('chalk');
+// index.js
 
-const execute = (command) => {
-  command = command.trim();
+import fs from 'fs';
+import { Lexer } from './lexer.js';
+import { Parser } from './parser.js';
+import { Interpreter } from './interpreter.js';
+import chalk from 'chalk';
 
-  // Basic arithmetic operations
-  const addRegex = /add\((.*),\s*(.*)\)/;
-  const subRegex = /subtract\((.*),\s*(.*)\)/;
-  const mulRegex = /multiply\((.*),\s*(.*)\)/;
-  const divRegex = /divide\((.*),\s*(.*)\)/;
+function main() {
+  const args = process.argv.slice(2);
 
-  let match;
-
-  if (match = command.match(addRegex)) {
-    const [, a, b] = match;
-    const result = parseFloat(a) + parseFloat(b);
-    return chalk.yellow(result);
-  } else if (match = command.match(subRegex)) {
-    const [, a, b] = match;
-    const result = parseFloat(a) - parseFloat(b);
-    return chalk.yellow(result);
-  } else if (match = command.match(mulRegex)) {
-    const [, a, b] = match;
-    const result = parseFloat(a) * parseFloat(b);
-    return chalk.yellow(result);
-  } else if (match = command.match(divRegex)) {
-    const [, a, b] = match;
-    if (parseFloat(b) === 0) {
-      return chalk.red('Error: Division by zero');
-    }
-    const result = parseFloat(a) / parseFloat(b);
-    return chalk.yellow(result);
-  } else if (command === 'help') {
-    return chalk.cyan(
-      'Available commands:\n' +
-      '  add(a, b)\n' +
-      '  subtract(a, b)\n' +
-      '  multiply(a, b)\n' +
-      '  divide(a, b)\n' +
-      '  help\n' +
-      '  .exit'
-    );
-  } else {
-    return chalk.red(`Unknown command: "${command}"`);
+  if (args.length !== 1) {
+    console.log(chalk.red('Usage: node index.js <file.th>'));
+    process.exit(1);
   }
-};
 
-module.exports = { execute };
+  const filePath = args[0];
+  if (!filePath.endsWith('.th')) {
+    console.log(chalk.red('Error: File must have a .th extension.'));
+    process.exit(1);
+  }
+
+  runFile(filePath);
+}
+
+function runFile(filePath) {
+  try {
+    const source = fs.readFileSync(filePath, 'utf-8');
+    run(source);
+  } catch (error) {
+    console.error(chalk.red(`Error reading file: ${filePath}`));
+    console.error(chalk.red(error.message));
+    process.exit(1);
+  }
+}
+
+function run(source) {
+    try {
+        const lexer = new Lexer(source);
+        const tokens = lexer.tokenize();
+
+        const parser = new Parser(tokens);
+        const statements = parser.parse();
+
+        // If there was a syntax error, stop.
+        if (statements.some(s => s === null)) { // A bit of a simplification
+            console.error(chalk.red("Syntax error detected. Halting execution."));
+            return;
+        }
+
+        const interpreter = new Interpreter();
+        interpreter.interpret(statements);
+
+    } catch (error) {
+        console.error(chalk.red(error.message));
+        process.exit(1);
+    }
+}
+
+
+main();

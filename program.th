@@ -1,0 +1,19 @@
+// This is a sample program for the TH language.
+
+// Variable assignments
+a = 10
+b = 20
+message = "The answer is: "
+
+// Perform some calculations
+c = (a + b) * 2
+result = message + c
+
+// Use the built-in print function to display the output
+result.print()
+
+// You can also print other types
+isWorking = true
+isWorking.print()
+
+"You can print literals directly too!".print()
