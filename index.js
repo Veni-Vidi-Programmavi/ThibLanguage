@@ -1,18 +1,48 @@
-var { app, BrowserWindow  } = require("electron");
+const chalk = require('chalk');
 
-var first;
+const execute = (command) => {
+  command = command.trim();
 
-function openF() {
-    first = new BrowserWindow({
-        height: 600,
-        width: 800,
-        resizable: true,
-        frame: false,
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        }
-    });
+  // Basic arithmetic operations
+  const addRegex = /add\((.*),\s*(.*)\)/;
+  const subRegex = /subtract\((.*),\s*(.*)\)/;
+  const mulRegex = /multiply\((.*),\s*(.*)\)/;
+  const divRegex = /divide\((.*),\s*(.*)\)/;
 
-    first.loadFile("index.html");
+  let match;
+
+  if (match = command.match(addRegex)) {
+    const [, a, b] = match;
+    const result = parseFloat(a) + parseFloat(b);
+    return chalk.yellow(result);
+  } else if (match = command.match(subRegex)) {
+    const [, a, b] = match;
+    const result = parseFloat(a) - parseFloat(b);
+    return chalk.yellow(result);
+  } else if (match = command.match(mulRegex)) {
+    const [, a, b] = match;
+    const result = parseFloat(a) * parseFloat(b);
+    return chalk.yellow(result);
+  } else if (match = command.match(divRegex)) {
+    const [, a, b] = match;
+    if (parseFloat(b) === 0) {
+      return chalk.red('Error: Division by zero');
+    }
+    const result = parseFloat(a) / parseFloat(b);
+    return chalk.yellow(result);
+  } else if (command === 'help') {
+    return chalk.cyan(
+      'Available commands:\n' +
+      '  add(a, b)\n' +
+      '  subtract(a, b)\n' +
+      '  multiply(a, b)\n' +
+      '  divide(a, b)\n' +
+      '  help\n' +
+      '  .exit'
+    );
+  } else {
+    return chalk.red(`Unknown command: "${command}"`);
+  }
 };
+
+module.exports = { execute };
