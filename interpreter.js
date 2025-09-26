@@ -35,7 +35,7 @@ class ThObject {
 
 // --- Built-in Function Registry ---
 const builtInFunctions = {
-  print: {
+  log: {
     execute: (callee, args) => {
       console.log(stringify(callee));
       return null;
