@@ -13,7 +13,7 @@ import chalk from 'chalk';
 // --- Built-in Function Registry ---
 // To add a new function, just add an entry to this object.
 const builtInFunctions = {
-  print: {
+  log: {
     // The 'callee' is the value the function is called on (e.g., 'hello' in "hello".print())
     execute: (callee, args) => {
       console.log(stringify(callee));
@@ -34,6 +34,14 @@ const builtInFunctions = {
         throw new Error("Runtime Error: The 'length' function can only be called on a string.");
       }
       return callee.length;
+    }
+  },
+  random: {
+    execute: (callee, args) => {
+      if (typeof callee !== 'int') {
+        throw new Error("Runtime Error: The 'random' function can only be called on a number.");
+      }
+      return Math.floor(Math.random() * (args.max - args.min + 1)) + min;
     }
   }
 };
