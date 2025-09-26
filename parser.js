@@ -23,6 +23,7 @@ export class Variable {
   }
 }
 
+// Assignment to a simple variable, e.g., a = 1
 export class Assignment {
   constructor(name, value) {
     this.name = name;
@@ -38,6 +39,33 @@ export class FunctionCall {
   }
 }
 
+// --- New AST Nodes for Data Objects ---
+
+// A data object literal, e.g., { key: value }
+export class DataObject {
+    constructor(properties) {
+        this.properties = properties; // This will be a Map
+    }
+}
+
+// Property access, e.g., myObject.property
+export class GetExpression {
+    constructor(object, name) {
+        this.object = object; // The object being accessed
+        this.name = name;     // The Token for the property name
+    }
+}
+
+// Property assignment, e.g., myObject.property = value
+export class SetExpression {
+    constructor(object, name, value) {
+        this.object = object; // The object whose property is being set
+        this.name = name;     // The Token for the property name
+        this.value = value;   // The new value
+    }
+}
+
+
 export class Parser {
   constructor(tokens) {
     this.tokens = tokens;
@@ -47,33 +75,34 @@ export class Parser {
   parse() {
     const statements = [];
     while (!this.isAtEnd()) {
-      statements.push(this.statement());
+      statements.push(this.expression());
     }
     return statements;
   }
 
-  statement() {
-    // Use lookahead to determine if we are parsing an assignment.
-    if (this.peek().type === TokenType.IDENTIFIER && this.tokens[this.current + 1].type === TokenType.EQUALS) {
-      return this.assignmentStatement();
-    }
-    return this.expressionStatement();
-  }
-
-  assignmentStatement() {
-      const name = this.consume(TokenType.IDENTIFIER, "Expect variable name.");
-      this.consume(TokenType.EQUALS, "Expect '=' after variable name.");
-      const value = this.expression();
-      return new Assignment(name.value, value);
-  }
-
-  expressionStatement() {
-    const expr = this.expression();
-    return expr;
-  }
-
   expression() {
-    return this.term();
+    return this.assignment();
+  }
+
+  assignment() {
+      const expr = this.term();
+
+      if (this.match(TokenType.EQUALS)) {
+          const equals = this.previous();
+          const value = this.assignment(); // Right-associative
+
+          if (expr instanceof Variable) {
+              const name = expr.name;
+              return new Assignment(name, value);
+          } else if (expr instanceof GetExpression) {
+              // This transforms a GetExpression into a SetExpression
+              return new SetExpression(expr.object, expr.name, value);
+          }
+
+          throw new Error("Parser Error: Invalid assignment target.");
+      }
+
+      return expr;
   }
 
   term() {
@@ -103,17 +132,26 @@ export class Parser {
   call() {
     let expr = this.primary();
 
-    while (this.match(TokenType.DOT)) {
-        const name = this.consume(TokenType.IDENTIFIER, "Expect function name after '.'.");
-        this.consume(TokenType.LPAREN, "Expect '(' after function name.");
-        const args = [];
-        if (!this.check(TokenType.RPAREN)) {
-            do {
-                args.push(this.expression());
-            } while (this.match(TokenType.COMMA));
+    while (true) {
+        if (this.match(TokenType.DOT)) {
+            const name = this.consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+            if (this.match(TokenType.LPAREN)) {
+                // It's a function call
+                const args = [];
+                if (!this.check(TokenType.RPAREN)) {
+                    do {
+                        args.push(this.expression());
+                    } while (this.match(TokenType.COMMA));
+                }
+                this.consume(TokenType.RPAREN, "Expect ')' after arguments.");
+                expr = new FunctionCall(expr, name.value, args);
+            } else {
+                // It's a property access
+                expr = new GetExpression(expr, name);
+            }
+        } else {
+            break;
         }
-        this.consume(TokenType.RPAREN, "Expect ')' after arguments.");
-        expr = new FunctionCall(expr, name.value, args);
     }
 
     return expr;
@@ -134,7 +172,27 @@ export class Parser {
       return expr;
     }
 
+    if (this.match(TokenType.LBRACE)) {
+        return this.dataObjectLiteral();
+    }
+
     throw new Error(`Parser Error: Unexpected token: ${this.peek().type}`);
+  }
+
+  dataObjectLiteral() {
+      const properties = new Map();
+
+      if (!this.check(TokenType.RBRACE)) {
+          do {
+              const key = this.consume(TokenType.IDENTIFIER, "Expect property name.");
+              this.consume(TokenType.COLON, "Expect ':' after property name.");
+              const value = this.expression();
+              properties.set(key.value, value);
+          } while (this.match(TokenType.COMMA));
+      }
+
+      this.consume(TokenType.RBRACE, "Expect '}' after data object properties.");
+      return new DataObject(properties);
   }
 
   // --- Helper Methods ---

@@ -43,3 +43,40 @@ isFinished.print()
 // Test quote-less string
 greeting = hello
 (greeting + ", world!").print()
+
+// --- Data Object Tests ---
+
+"--- Testing Data Objects ---".print()
+
+// Create a data object
+user = {
+    name: "Jules",
+    role: "Software Engineer",
+    level: 10,
+    isAvailable: yes
+}
+
+"Original user object:".print()
+user.print()
+
+// Access a property
+"User's name:".print()
+user.name.print()
+
+// Update a property
+user.level = user.level + 1
+"Updated user object:".print()
+user.print()
+
+// Test built-in functions
+"Does user have a 'role' property? (Should be true)".print()
+user.has("role").print()
+
+"Does user have an 'email' property? (Should be false)".print()
+user.has("email").print()
+
+"User object keys:".print()
+user.keys().print()
+
+"User object values:".print()
+user.values().print()

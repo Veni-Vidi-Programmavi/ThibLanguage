@@ -17,8 +17,11 @@ export const TokenType = {
   // Delimiters
   LPAREN: 'LPAREN', // (
   RPAREN: 'RPAREN', // )
+  LBRACE: 'LBRACE', // {
+  RBRACE: 'RBRACE', // }
   DOT: 'DOT',       // .
   COMMA: 'COMMA',   // ,
+  COLON: 'COLON',   // :
 
   // Keywords
   // (We handle boolean keywords `true` and `false` as IDENTIFIERS first, then re-classify)
@@ -83,6 +86,9 @@ export class Lexer {
       case ')': this.addToken(TokenType.RPAREN); break;
       case '.': this.addToken(TokenType.DOT); break;
       case ',': this.addToken(TokenType.COMMA); break;
+      case ':': this.addToken(TokenType.COLON); break;
+      case '{': this.addToken(TokenType.LBRACE); break;
+      case '}': this.addToken(TokenType.RBRACE); break;
       case '"': this.string(); break;
       default:
         if (this.isDigit(char)) {
