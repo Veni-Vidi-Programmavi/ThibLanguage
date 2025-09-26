@@ -29,3 +29,17 @@ myString.length().print()
 myNumber = 81
 "The square root of 81 is: ".print()
 myNumber.sqrt().print()
+
+// --- Quote-less strings and new boolean tests ---
+
+// Test 'yes'/'no' booleans
+isReady = yes
+isFinished = no
+"Is ready? ".print()
+isReady.print()
+"Is finished? ".print()
+isFinished.print()
+
+// Test quote-less string
+greeting = hello
+(greeting + ", world!").print()

@@ -30,6 +30,8 @@ export const TokenType = {
 const KEYWORDS = {
   'true': TokenType.BOOLEAN,
   'false': TokenType.BOOLEAN,
+  'yes': TokenType.BOOLEAN,
+  'no': TokenType.BOOLEAN,
 };
 
 export class Lexer {
@@ -155,7 +157,7 @@ export class Lexer {
     const type = KEYWORDS[text] || TokenType.IDENTIFIER;
 
     if (type === TokenType.BOOLEAN) {
-        this.addToken(type, text === 'true');
+        this.addToken(type, text === 'true' || text === 'yes');
     } else {
         this.addToken(type);
     }
