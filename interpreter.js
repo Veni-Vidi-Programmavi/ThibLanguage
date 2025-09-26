@@ -12,6 +12,7 @@ import {
   SetExpression,
   BlockStatement,
   ForEachStatement,
+  IndexExpression,
 } from './parser.js';
 import chalk from 'chalk';
 
@@ -46,14 +47,15 @@ class ThList {
 
 // --- Built-in Function Registry ---
 const builtInFunctions = {
-  log: { execute: (callee, args) => { console.log(stringify(callee)); return null; } },
+  print: { execute: (callee, args) => { console.log(stringify(callee)); return null; } },
+  log: { execute: (callee, args) => { console.log(stringify(callee)); return null; } }, // Alias for print
   sqrt: { execute: (callee, args) => { if (typeof callee !== 'number') throw new Error("Runtime Error: 'sqrt' can only be called on a number."); return Math.sqrt(callee); } },
   length: { execute: (callee, args) => { if (typeof callee !== 'string') throw new Error("Runtime Error: 'length' can only be called on a string."); return callee.length; } },
   has: { execute: (callee, args) => { if (!(callee instanceof ThObject)) throw new Error("Runtime Error: 'has' can only be called on a data object."); if (args.length !== 1) throw new Error("Runtime Error: 'has' expects one argument (the key to check)."); return callee.properties.has(args[0]); } },
   keys: { execute: (callee, args) => { if (!(callee instanceof ThObject)) throw new Error("Runtime Error: 'keys' can only be called on a data object."); const keys = Array.from(callee.properties.keys()); return `[${keys.join(', ')}]`; } },
   values: { execute: (callee, args) => { if (!(callee instanceof ThObject)) throw new Error("Runtime Error: 'values' can only be called on a data object."); const values = Array.from(callee.properties.values()).map(v => stringify(v)); return `[${values.join(', ')}]`; } },
   add: { execute: (callee, args) => { if (!(callee instanceof ThList)) throw new Error("Runtime Error: 'add' can only be called on a database/list."); if (args.length !== 1) throw new Error("Runtime Error: 'add' expects one argument."); callee.add(args[0]); return null; } },
-  replace: { execute: (callee, args) => { if (!(callee instanceof ThList)) throw new Error("Runtime Error: 'replace' can only be called on a database/list."); if (args.length !== 2) throw new Error("Runtime Error: 'replace' expects two arguments (oldValue, newValue)."); callee.replace(args[0], args[1]); return null; } },
+  replace: { execute: (callee, args) => { if (!(callee instanceof ThList)) throw new Error("Runtime Error: 'replace' expects two arguments (oldValue, newValue)."); callee.replace(args[0], args[1]); return null; } },
 };
 
 // --- Environment for Scoping ---
@@ -78,7 +80,6 @@ class Environment {
 export class Interpreter {
   constructor() {
     this.environment = new Environment();
-    // Define global 'data' object
     this.environment.define('data', new ThObject());
   }
 
@@ -124,6 +125,21 @@ export class Interpreter {
           this.executeBlock(stmt.body.statements, loopEnvironment);
       }
       return null;
+  }
+
+  visitIndexExpression(expr) {
+      const collection = this.evaluate(expr.collection);
+      if (!(collection instanceof ThList)) {
+          throw new Error("Runtime Error: Can only use index access '.[index]' on a database/list.");
+      }
+      const index = this.evaluate(expr.index);
+      if (typeof index !== 'number') {
+          throw new Error("Runtime Error: Index must be a number.");
+      }
+      if (index < 0 || index >= collection.items.length) {
+          return null; // Out of bounds access returns null
+      }
+      return collection.items[index];
   }
 
   visitLiteral(expr) { return expr.value; }

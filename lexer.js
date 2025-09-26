@@ -19,6 +19,8 @@ export const TokenType = {
   RPAREN: 'RPAREN', // )
   LBRACE: 'LBRACE', // {
   RBRACE: 'RBRACE', // }
+  LBRACKET: 'LBRACKET', // [
+  RBRACKET: 'RBRACKET', // ]
   DOT: 'DOT',       // .
   COMMA: 'COMMA',   // ,
   COLON: 'COLON',   // :
@@ -92,6 +94,8 @@ export class Lexer {
       case ':': this.addToken(TokenType.COLON); break;
       case '{': this.addToken(TokenType.LBRACE); break;
       case '}': this.addToken(TokenType.RBRACE); break;
+      case '[': this.addToken(TokenType.LBRACKET); break;
+      case ']': this.addToken(TokenType.RBRACKET); break;
       case '"': this.string(); break;
       default:
         if (this.isDigit(char)) {

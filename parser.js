@@ -59,7 +59,14 @@ export class SetExpression {
     }
 }
 
-// --- New AST Nodes for Statements ---
+export class IndexExpression {
+    constructor(collection, index) {
+        this.collection = collection;
+        this.index = index;
+    }
+}
+
+// --- AST Nodes for Statements ---
 
 export class BlockStatement {
     constructor(statements) {
@@ -102,9 +109,9 @@ export class Parser {
 
   forEachStatement() {
       this.consume(TokenType.LPAREN, "Expect '(' after 'forEach'.");
-      const variable = this.consume(TokenType.IDENTIFIER, "Expect loop variable name.");
-      this.consume(TokenType.IN, "Expect 'in' after loop variable.");
       const collection = this.expression();
+      this.consume(TokenType.COMMA, "Expect ',' separating collection and variable.");
+      const variable = this.consume(TokenType.IDENTIFIER, "Expect loop variable name.");
       this.consume(TokenType.RPAREN, "Expect ')' after forEach clause.");
 
       const body = this.statement();
@@ -171,18 +178,24 @@ export class Parser {
     let expr = this.primary();
     while (true) {
         if (this.match(TokenType.DOT)) {
-            const name = this.consume(TokenType.IDENTIFIER, "Expect property or method name after '.'.");
-            if (this.match(TokenType.LPAREN)) {
-                const args = [];
-                if (!this.check(TokenType.RPAREN)) {
-                    do {
-                        args.push(this.expression());
-                    } while (this.match(TokenType.COMMA));
-                }
-                this.consume(TokenType.RPAREN, "Expect ')' after arguments.");
-                expr = new FunctionCall(expr, name.value, args);
+            if (this.match(TokenType.LBRACKET)) {
+                const index = this.expression();
+                this.consume(TokenType.RBRACKET, "Expect ']' after index expression.");
+                expr = new IndexExpression(expr, index);
             } else {
-                expr = new GetExpression(expr, name);
+                const name = this.consume(TokenType.IDENTIFIER, "Expect property or method name after '.'.");
+                if (this.match(TokenType.LPAREN)) {
+                    const args = [];
+                    if (!this.check(TokenType.RPAREN)) {
+                        do {
+                            args.push(this.expression());
+                        } while (this.match(TokenType.COMMA));
+                    }
+                    this.consume(TokenType.RPAREN, "Expect ')' after arguments.");
+                    expr = new FunctionCall(expr, name.value, args);
+                } else {
+                    expr = new GetExpression(expr, name);
+                }
             }
         } else {
             break;
@@ -204,8 +217,6 @@ export class Parser {
       return expr;
     }
     if (this.match(TokenType.LBRACE)) {
-        // Check if it's a block or a data object. Since data objects are only at the start of an expression, this check is tricky. For now, we assume { is for data objects if not a statement block.
-        // The statement() method already handles block statements, so a { here must be a data object literal.
         return this.dataObjectLiteral();
     }
     throw new Error(`Parser Error: Unexpected token: ${this.peek().type}`);

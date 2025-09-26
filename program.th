@@ -102,8 +102,12 @@ data.tasks.replace("Test features", "Write more tests")
 "Database after replacement:".print()
 data.tasks.print()
 
+// Test indexed access
+"Accessing second task by index:".print()
+data.tasks.[1].print()
+
 // Loop over the database and print each task
 "Looping over tasks:".print()
-forEach(task in data.tasks) {
-    ("  - " + task).print()
+forEach(data.tasks, task) {
+    ("  - " + task).log()
 }
