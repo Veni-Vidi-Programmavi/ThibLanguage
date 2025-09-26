@@ -46,7 +46,7 @@ class ThList {
 
 // --- Built-in Function Registry ---
 const builtInFunctions = {
-  print: { execute: (callee, args) => { console.log(stringify(callee)); return null; } },
+  log: { execute: (callee, args) => { console.log(stringify(callee)); return null; } },
   sqrt: { execute: (callee, args) => { if (typeof callee !== 'number') throw new Error("Runtime Error: 'sqrt' can only be called on a number."); return Math.sqrt(callee); } },
   length: { execute: (callee, args) => { if (typeof callee !== 'string') throw new Error("Runtime Error: 'length' can only be called on a string."); return callee.length; } },
   has: { execute: (callee, args) => { if (!(callee instanceof ThObject)) throw new Error("Runtime Error: 'has' can only be called on a data object."); if (args.length !== 1) throw new Error("Runtime Error: 'has' expects one argument (the key to check)."); return callee.properties.has(args[0]); } },
