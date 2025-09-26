@@ -17,3 +17,15 @@ isWorking = true
 isWorking.print()
 
 "You can print literals directly too!".print()
+
+// --- New function tests ---
+
+// Test the 'length' function on a string
+myString = "Hello, World!"
+"The length of the string is: ".print()
+myString.length().print()
+
+// Test the 'sqrt' function on a number
+myNumber = 81
+"The square root of 81 is: ".print()
+myNumber.sqrt().print()

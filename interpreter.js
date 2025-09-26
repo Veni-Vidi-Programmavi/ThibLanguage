@@ -10,6 +10,35 @@ import {
 } from './parser.js';
 import chalk from 'chalk';
 
+// --- Built-in Function Registry ---
+// To add a new function, just add an entry to this object.
+const builtInFunctions = {
+  print: {
+    // The 'callee' is the value the function is called on (e.g., 'hello' in "hello".print())
+    execute: (callee, args) => {
+      console.log(stringify(callee));
+      return null; // print returns nothing
+    }
+  },
+  sqrt: {
+    execute: (callee, args) => {
+      if (typeof callee !== 'number') {
+        throw new Error("Runtime Error: The 'sqrt' function can only be called on a number.");
+      }
+      return Math.sqrt(callee);
+    }
+  },
+  length: {
+    execute: (callee, args) => {
+      if (typeof callee !== 'string') {
+        throw new Error("Runtime Error: The 'length' function can only be called on a string.");
+      }
+      return callee.length;
+    }
+  }
+};
+
+
 class Environment {
   constructor() {
     this.values = new Map();
@@ -45,22 +74,12 @@ export class Interpreter {
   }
 
   evaluate(expr) {
-    if (expr instanceof BinaryExpression) {
-      return this.visitBinaryExpression(expr);
+    // This is the visitor pattern. We call the appropriate visit method based on the node's type.
+    const visitorMethod = `visit${expr.constructor.name}`;
+    if (this[visitorMethod]) {
+      return this[visitorMethod](expr);
     }
-    if (expr instanceof Literal) {
-      return this.visitLiteral(expr);
-    }
-    if (expr instanceof Variable) {
-      return this.visitVariable(expr);
-    }
-    if (expr instanceof Assignment) {
-      return this.visitAssignment(expr);
-    }
-    if (expr instanceof FunctionCall) {
-      return this.visitFunctionCall(expr);
-    }
-    throw new Error('Interpreter Error: Unknown AST node.');
+    throw new Error(`Interpreter Error: No visitor method found for ${expr.constructor.name}`);
   }
 
   visitLiteral(expr) {
@@ -86,54 +105,44 @@ export class Interpreter {
         if (typeof left === 'number' && typeof right === 'number') {
           return left + right;
         }
-        // Allow string concatenation
         if (typeof left === 'string' || typeof right === 'string') {
-            return String(left) + String(right);
+          return String(left) + String(right);
         }
-        throw new Error('Runtime Error: Operands must be two numbers or at least one string for +.');
+        throw new Error('Runtime Error: Operands for + must be two numbers or at least one string.');
       case TokenType.MINUS:
-         if (typeof left === 'number' && typeof right === 'number') {
-            return left - right;
-        }
-        throw new Error('Runtime Error: Operands must be numbers for -.');
+         if (typeof left === 'number' && typeof right === 'number') return left - right;
+        throw new Error('Runtime Error: Operands for - must be numbers.');
       case TokenType.MULTIPLY:
-         if (typeof left === 'number' && typeof right === 'number') {
-            return left * right;
-        }
-        throw new Error('Runtime Error: Operands must be numbers for *.');
+         if (typeof left === 'number' && typeof right === 'number') return left * right;
+        throw new Error('Runtime Error: Operands for * must be numbers.');
       case TokenType.DIVIDE:
          if (typeof left === 'number' && typeof right === 'number') {
-            if (right === 0) {
-                throw new Error('Runtime Error: Division by zero.');
-            }
+            if (right === 0) throw new Error('Runtime Error: Division by zero.');
             return left / right;
         }
-        throw new Error('Runtime Error: Operands must be numbers for /.');
+        throw new Error('Runtime Error: Operands for / must be numbers.');
     }
-
-    // Unreachable
-    return null;
+    return null; // Unreachable
   }
 
   visitFunctionCall(expr) {
       const callee = this.evaluate(expr.callee);
       const args = expr.args.map(arg => this.evaluate(arg));
 
-      // For now, we only handle a built-in 'print' function
-      if (expr.functionName === 'print') {
-          // The 'print' function logs the object it's called on.
-          console.log(this.stringify(callee));
-          return null; // print returns nothing
+      const func = builtInFunctions[expr.functionName];
+
+      if (func) {
+          return func.execute(callee, args);
       }
 
-      throw new Error(`Runtime Error: '${expr.functionName}' is not a function.`);
+      throw new Error(`Runtime Error: '${expr.functionName}' is not a recognized function.`);
   }
+}
 
-  stringify(value) {
-      if (value === null) return "null";
-      if (typeof value === 'boolean') return String(value);
-      if (typeof value === 'string') return value;
-      if (typeof value === 'number') return String(value);
-      return `[Internal Object]`;
-  }
+// Helper to display values in the REPL or console
+function stringify(value) {
+    if (value === null) return "null";
+    if (typeof value === 'boolean' || typeof value === 'number') return String(value);
+    if (typeof value === 'string') return value; // Strings are already strings
+    return `[Internal Object]`;
 }
