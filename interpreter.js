@@ -38,8 +38,12 @@ const builtInFunctions = {
   },
   random: {
     execute: (callee, args) => {
-      if (typeof callee !== 'int') {
+      if (typeof callee !== 'number') {
         throw new Error("Runtime Error: The 'random' function can only be called on a number.");
+      }
+      const [min, max] = args;
+      if (typeof min !== 'number' || typeof max !== 'number') {
+        throw new Error("Runtime Error: 'random' expects two number arguments: min and max.");
       }
       return Math.floor(Math.random() * (args.max - args.min + 1)) + min;
     }
