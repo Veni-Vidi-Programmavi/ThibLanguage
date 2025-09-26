@@ -23,7 +23,6 @@ export class Variable {
   }
 }
 
-// Assignment to a simple variable, e.g., a = 1
 export class Assignment {
   constructor(name, value) {
     this.name = name;
@@ -39,29 +38,40 @@ export class FunctionCall {
   }
 }
 
-// --- New AST Nodes for Data Objects ---
-
-// A data object literal, e.g., { key: value }
 export class DataObject {
     constructor(properties) {
-        this.properties = properties; // This will be a Map
+        this.properties = properties;
     }
 }
 
-// Property access, e.g., myObject.property
 export class GetExpression {
     constructor(object, name) {
-        this.object = object; // The object being accessed
-        this.name = name;     // The Token for the property name
+        this.object = object;
+        this.name = name;
     }
 }
 
-// Property assignment, e.g., myObject.property = value
 export class SetExpression {
     constructor(object, name, value) {
-        this.object = object; // The object whose property is being set
-        this.name = name;     // The Token for the property name
-        this.value = value;   // The new value
+        this.object = object;
+        this.name = name;
+        this.value = value;
+    }
+}
+
+// --- New AST Nodes for Statements ---
+
+export class BlockStatement {
+    constructor(statements) {
+        this.statements = statements;
+    }
+}
+
+export class ForEachStatement {
+    constructor(variable, collection, body) {
+        this.variable = variable;
+        this.collection = collection;
+        this.body = body;
     }
 }
 
@@ -75,9 +85,44 @@ export class Parser {
   parse() {
     const statements = [];
     while (!this.isAtEnd()) {
-      statements.push(this.expression());
+      statements.push(this.statement());
     }
     return statements;
+  }
+
+  statement() {
+      if (this.match(TokenType.FOREACH)) {
+          return this.forEachStatement();
+      }
+      if (this.match(TokenType.LBRACE)) {
+          return new BlockStatement(this.block());
+      }
+      return this.expressionStatement();
+  }
+
+  forEachStatement() {
+      this.consume(TokenType.LPAREN, "Expect '(' after 'forEach'.");
+      const variable = this.consume(TokenType.IDENTIFIER, "Expect loop variable name.");
+      this.consume(TokenType.IN, "Expect 'in' after loop variable.");
+      const collection = this.expression();
+      this.consume(TokenType.RPAREN, "Expect ')' after forEach clause.");
+
+      const body = this.statement();
+
+      return new ForEachStatement(variable, collection, body);
+  }
+
+  block() {
+      const statements = [];
+      while (!this.check(TokenType.RBRACE) && !this.isAtEnd()) {
+          statements.push(this.statement());
+      }
+      this.consume(TokenType.RBRACE, "Expect '}' after block.");
+      return statements;
+  }
+
+  expressionStatement() {
+    return this.expression();
   }
 
   expression() {
@@ -88,14 +133,11 @@ export class Parser {
       const expr = this.term();
 
       if (this.match(TokenType.EQUALS)) {
-          const equals = this.previous();
-          const value = this.assignment(); // Right-associative
+          const value = this.assignment();
 
           if (expr instanceof Variable) {
-              const name = expr.name;
-              return new Assignment(name, value);
+              return new Assignment(expr.name, value);
           } else if (expr instanceof GetExpression) {
-              // This transforms a GetExpression into a SetExpression
               return new SetExpression(expr.object, expr.name, value);
           }
 
@@ -107,36 +149,30 @@ export class Parser {
 
   term() {
     let expr = this.factor();
-
     while (this.match(TokenType.PLUS, TokenType.MINUS)) {
       const operator = this.previous();
       const right = this.factor();
       expr = new BinaryExpression(expr, operator, right);
     }
-
     return expr;
   }
 
   factor() {
     let expr = this.call();
-
     while (this.match(TokenType.MULTIPLY, TokenType.DIVIDE)) {
       const operator = this.previous();
       const right = this.call();
       expr = new BinaryExpression(expr, operator, right);
     }
-
     return expr;
   }
 
   call() {
     let expr = this.primary();
-
     while (true) {
         if (this.match(TokenType.DOT)) {
-            const name = this.consume(TokenType.IDENTIFIER, "Expect property name after '.'.");
+            const name = this.consume(TokenType.IDENTIFIER, "Expect property or method name after '.'.");
             if (this.match(TokenType.LPAREN)) {
-                // It's a function call
                 const args = [];
                 if (!this.check(TokenType.RPAREN)) {
                     do {
@@ -146,14 +182,12 @@ export class Parser {
                 this.consume(TokenType.RPAREN, "Expect ')' after arguments.");
                 expr = new FunctionCall(expr, name.value, args);
             } else {
-                // It's a property access
                 expr = new GetExpression(expr, name);
             }
         } else {
             break;
         }
     }
-
     return expr;
   }
 
@@ -161,27 +195,24 @@ export class Parser {
     if (this.match(TokenType.NUMBER, TokenType.STRING, TokenType.BOOLEAN)) {
       return new Literal(this.previous().value);
     }
-
     if (this.match(TokenType.IDENTIFIER)) {
         return new Variable(this.previous().value);
     }
-
     if (this.match(TokenType.LPAREN)) {
       const expr = this.expression();
       this.consume(TokenType.RPAREN, "Expect ')' after expression.");
       return expr;
     }
-
     if (this.match(TokenType.LBRACE)) {
+        // Check if it's a block or a data object. Since data objects are only at the start of an expression, this check is tricky. For now, we assume { is for data objects if not a statement block.
+        // The statement() method already handles block statements, so a { here must be a data object literal.
         return this.dataObjectLiteral();
     }
-
     throw new Error(`Parser Error: Unexpected token: ${this.peek().type}`);
   }
 
   dataObjectLiteral() {
       const properties = new Map();
-
       if (!this.check(TokenType.RBRACE)) {
           do {
               const key = this.consume(TokenType.IDENTIFIER, "Expect property name.");
@@ -190,7 +221,6 @@ export class Parser {
               properties.set(key.value, value);
           } while (this.match(TokenType.COMMA));
       }
-
       this.consume(TokenType.RBRACE, "Expect '}' after data object properties.");
       return new DataObject(properties);
   }

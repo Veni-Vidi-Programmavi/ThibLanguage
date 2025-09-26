@@ -24,7 +24,8 @@ export const TokenType = {
   COLON: 'COLON',   // :
 
   // Keywords
-  // (We handle boolean keywords `true` and `false` as IDENTIFIERS first, then re-classify)
+  FOREACH: 'FOREACH',
+  IN: 'IN',
 
   // End of File
   EOF: 'EOF',
@@ -35,6 +36,8 @@ const KEYWORDS = {
   'false': TokenType.BOOLEAN,
   'yes': TokenType.BOOLEAN,
   'no': TokenType.BOOLEAN,
+  'forEach': TokenType.FOREACH,
+  'in': TokenType.IN,
 };
 
 export class Lexer {

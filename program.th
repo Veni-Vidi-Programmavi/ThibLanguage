@@ -80,3 +80,30 @@ user.keys().print()
 
 "User object values:".print()
 user.values().print()
+
+// --- Database and forEach Loop Tests ---
+
+"--- Testing Databases and forEach Loops ---".print()
+
+// Create a new database (list)
+data.create("tasks")
+
+// Add items to the database
+data.tasks.add("Write code")
+data.tasks.add("Test features")
+data.tasks.add("Document changes")
+
+"Initial database:".print()
+data.tasks.print()
+
+// Replace an item
+data.tasks.replace("Test features", "Write more tests")
+
+"Database after replacement:".print()
+data.tasks.print()
+
+// Loop over the database and print each task
+"Looping over tasks:".print()
+forEach(task in data.tasks) {
+    ("  - " + task).print()
+}
