@@ -1,18 +1,22 @@
 {
-  "devDependencies": {
-    "electron": "^38.0.0"
-  },
-  "dependencies": {
-    "node": "^20.19.5"
-  },
-  "name": "thiblanguage",
-  "description": "A new easy language for code with graphic interface and dynamic script in the same. Based on node.js and html, css, javascript.",
+  "name": "th-language",
   "version": "1.0.0",
+  "description": "A custom scripting language that runs on Node.js",
   "main": "index.js",
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "electron ."
+    "start": "node index.js",
+    "repl": "node repl.js"
   },
-  "author": "Thibault henry",
-  "license": "ISC"
+  "keywords": [
+    "custom",
+    "language",
+    "interpreter",
+    "nodejs"
+  ],
+  "author": "Jules",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^5.3.0"
+  }
 }

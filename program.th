@@ -1,0 +1,113 @@
+// This is a sample program for the TH language.
+
+// Variable assignments
+a = 10
+b = 20
+message = "The answer is: "
+
+// Perform some calculations
+c = (a + b) * 2
+result = message + c
+
+// Use the built-in print function to display the output
+result.print()
+
+// You can also print other types
+isWorking = true
+isWorking.print()
+
+"You can print literals directly too!".print()
+
+// --- New function tests ---
+
+// Test the 'length' function on a string
+myString = "Hello, World!"
+"The length of the string is: ".print()
+myString.length().print()
+
+// Test the 'sqrt' function on a number
+myNumber = 81
+"The square root of 81 is: ".print()
+myNumber.sqrt().print()
+
+// --- Quote-less strings and new boolean tests ---
+
+// Test 'yes'/'no' booleans
+isReady = yes
+isFinished = no
+"Is ready? ".print()
+isReady.print()
+"Is finished? ".print()
+isFinished.print()
+
+// Test quote-less string
+greeting = hello
+(greeting + ", world!").print()
+
+// --- Data Object Tests ---
+
+"--- Testing Data Objects ---".print()
+
+// Create a data object
+user = {
+    name: "Jules",
+    role: "Software Engineer",
+    level: 10,
+    isAvailable: yes
+}
+
+"Original user object:".print()
+user.print()
+
+// Access a property
+"User's name:".print()
+user.name.print()
+
+// Update a property
+user.level = user.level + 1
+"Updated user object:".print()
+user.print()
+
+// Test built-in functions
+"Does user have a 'role' property? (Should be true)".print()
+user.has("role").print()
+
+"Does user have an 'email' property? (Should be false)".print()
+user.has("email").print()
+
+"User object keys:".print()
+user.keys().print()
+
+"User object values:".print()
+user.values().print()
+
+// --- Database and forEach Loop Tests ---
+
+"--- Testing Databases and forEach Loops ---".print()
+
+// Create a new database (list)
+data.create("tasks")
+
+// Add items to the database
+data.tasks.add("Write code")
+data.tasks.add("Test features")
+data.tasks.add("Document changes")
+
+"Initial database:".print()
+data.tasks.print()
+
+// Replace an item
+data.tasks.replace("Test features", "Write more tests")
+
+"Database after replacement:".print()
+data.tasks.print()
+
+// Test indexed access
+"Accessing second task by index:".print()
+data.tasks.[1].print()
+
+// Loop over the database and print each task
+"Looping over tasks:".print()
+forEach(data.tasks, task) {
+    ("  - " + task).log()
+}
